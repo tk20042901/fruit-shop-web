@@ -8,6 +8,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -288,6 +289,11 @@ public class OrderService {
                 .filter(orderStatusService::isCancelledStatus)
                 .count();
     }
+    public long getTotalShippingOrders(){
+        return orderRepository.findAll().stream()
+                .filter(orderStatusService::isShippingStatus)
+                .count();
+    }
 
     public long getUnitSold(){
         long total =0;
@@ -371,7 +377,6 @@ public class OrderService {
         return Math.round(percentageChange * 100.0)/100.0;
     }
 
-
     public void markOrderStatusAsShipping(Order order) {
         order.setOrderStatus(orderStatusService.getShippingStatus());
         order.addShippingStatus(Shipping.builder()
@@ -379,6 +384,24 @@ public class OrderService {
                 .build());
         shipperService.autoAssignShipperToOrder(order);
         orderRepository.save(order);
+    }
+
+    public void markOrderShippingStatusAsAwaitingPickup(Long orderId, Principal principal) {
+        if (principal == null) {
+            throw new RuntimeException("Người giao hàng không xác định");
+        }
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
+
+        try {
+            // Update shipping status to awaiting pickup
+            order.addShippingStatus(Shipping.builder()
+                    .shippingStatus(shippingStatusService.getAwaitingPickupStatus())
+                    .build());
+            orderRepository.save(order);
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi chuyển trạng thái: " + e.getMessage());
+        }
     }
 
     public void markOrderShippingStatusAsPickedUp(Long orderId, Principal principal) {
@@ -535,7 +558,7 @@ public class OrderService {
         return new PageImpl<>(pagedOrders, pageable, allOrders.size());
     }
 
-    public Page<Order> getDoneOrders(Principal principal, int page, int size, String searchQuery, String sortCriteria, int k, String sortCriteriaInPage) {
+    public Page<Order> getDoneOrders(Principal principal, int page, int size, String searchQuery, Date completionDateFromQuery, Date completionDateToQuery, String sortCriteria, int k, String sortCriteriaInPage) {
         if (principal == null) {
             throw new RuntimeException("Người giao hàng không xác định");
         }
@@ -550,6 +573,7 @@ public class OrderService {
                 case "id" -> o1.getId().compareTo(o2.getId());
                 case "email" -> o1.getCustomer().getEmail().compareTo(o2.getCustomer().getEmail());
                 case "status" -> o1.getCurrentShippingStatus().getId().compareTo(o2.getCurrentShippingStatus().getId());
+                case "deliveredAt" -> o1.getCurrentShipping().getOccurredAt().compareTo(o2.getCurrentShipping().getOccurredAt());
                 default -> 0;
             };
         })
@@ -558,6 +582,22 @@ public class OrderService {
         if (searchQuery != null && !searchQuery.trim().isEmpty()) {
             allOrders = allOrders.stream()
                 .filter(order -> order.getCustomer().getEmail().toLowerCase().contains(searchQuery.toLowerCase()))
+                .toList();
+        }
+
+        if (completionDateFromQuery != null) {
+            LocalDateTime fromDateTime = LocalDateTime.ofInstant(completionDateFromQuery.toInstant(), java.time.ZoneId.systemDefault());
+            allOrders = allOrders.stream()
+                .filter(order -> order.getCurrentShipping().getOccurredAt().isAfter(fromDateTime) ||
+                                 order.getCurrentShipping().getOccurredAt().isEqual(fromDateTime))
+                .toList();
+        }
+
+        if (completionDateToQuery != null) {
+            LocalDateTime toDateTime = LocalDateTime.ofInstant(completionDateToQuery.toInstant(), java.time.ZoneId.systemDefault());
+            allOrders = allOrders.stream()
+                .filter(order -> order.getCurrentShipping().getOccurredAt().isBefore(toDateTime) ||
+                                 order.getCurrentShipping().getOccurredAt().isEqual(toDateTime))
                 .toList();
         }
 
@@ -572,6 +612,7 @@ public class OrderService {
                 case "id" -> k * o1.getId().compareTo(o2.getId());
                 case "email" -> k * o1.getCustomer().getEmail().compareTo(o2.getCustomer().getEmail());
                 case "status" -> k * o1.getCurrentShippingStatus().getId().compareTo(o2.getCurrentShippingStatus().getId());
+                case "deliveredAt" -> k * o1.getCurrentShipping().getOccurredAt().compareTo(o2.getCurrentShipping().getOccurredAt());
                 default -> 0;
             };
         })
@@ -790,4 +831,5 @@ public class OrderService {
             .filter(orderStatusService::isDeliveredStatus)
             .count();
     }
+
 }

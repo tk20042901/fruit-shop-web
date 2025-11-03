@@ -111,7 +111,7 @@ public class SellerController {
             redirectAttributes.addFlashAttribute("msg",
                     "Từ chối đơn hàng thành công");
         }
-        return "redirect:/seller/all-orders";
+        return "redirect:/seller/order-detail/"+orderId;
     }
 
     @PostMapping("/update-processing-order-status")
@@ -121,7 +121,7 @@ public class SellerController {
         redirectAttributes.addFlashAttribute("msg",
                 "Cập nhật trạng thái đơn hàng thành Đang giao hàng thành công.\n" +
                         "Hệ thống đã tự động phân công Shipper cho đơn hàng.");
-        return "redirect:/seller/all-orders";
+        return "redirect:/seller/order-detail/"+orderId;
     }
 
     @GetMapping("/all-products")
@@ -170,14 +170,16 @@ public class SellerController {
     }
     @GetMapping("/statistic-report")
     public String getSellerReport(Model model) {
+        List<Order> orders = sellerService.get5NearOrder();
         model.addAttribute("totalOrder",orderService.getTotalOrders());
         model.addAttribute("deliverOrder",orderService.getTotalDeliveredOrders());
         model.addAttribute("processingOrder",orderService.getTotalProcessingOrders());
         model.addAttribute("pendingOrder",orderService.getTotalPendingOrders());
-        model.addAttribute("unitSold", orderService.getUnitSold());
+        model.addAttribute("shippingOrder",orderService.getTotalShippingOrders());
         model.addAttribute("totalCanceledOrder", orderService.getTotalCancelledOrders());
         model.addAttribute("nearlySoldOutProducts", orderService.getNearlySoldOutProduct());
         model.addAttribute("top5ProductRevenue",sellerService.getTop5ProductRevenue());
+        model.addAttribute("recentOrders",orders);
         return "pages/seller/index";
     }
 
