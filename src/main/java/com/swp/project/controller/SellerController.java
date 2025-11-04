@@ -103,7 +103,7 @@ public class SellerController {
                 redirectAttributes.addFlashAttribute("error",
                         "Lỗi: Một số sản phẩm trong đơn hàng vừa chấp nhận có số lượng lớn hơn số lượng hiện có trong kho. Tác vụ bị hủy.");
             } else {
-                orderService.doWhenOrderConfirmed(orderService.getOrderById(orderId));
+                orderService.doWhenCodOrderConfirmed(orderService.getOrderById(orderId));
                 redirectAttributes.addFlashAttribute("msg", "Chấp nhận đơn hàng thành công");
             }
         } else if (action.equals("reject")) {
@@ -139,7 +139,7 @@ public class SellerController {
         } else if ("priceDesc".equalsIgnoreCase(sortBy)) {
             sort = Sort.by("price").descending();
         }else {
-            sort = Sort.by("id").descending(); // mặc định
+            sort = Sort.by("id").ascending(); // mặc định
         }
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Product> products = productService.searchProductForSeller(name, enabled,minPrice,maxPrice, pageable);
@@ -155,8 +155,6 @@ public class SellerController {
     @GetMapping("/product/product-detail/{productId}")
     public String getProductDetail(@PathVariable("productId") Long id, Model model) {
         Product product = productService.getProductById(id);
-        double availableQuantity = productService.getAvailableQuantity(id);
-        model.addAttribute("availableQuantity", availableQuantity);
         model.addAttribute("product", product);
         return "pages/seller/product/product-detail";
     }
@@ -185,11 +183,13 @@ public class SellerController {
 
     @GetMapping("/product-report")
     public String getProductRevenueReport(
+            @RequestParam(required = false) String searchName,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             Model model) {
-        Page<ProductRevenueDto> productRevenues = sellerService.getProductRevenue(page,size);
+        Page<ProductRevenueDto> productRevenues = sellerService.getProductRevenue(searchName,page,size);
         model.addAttribute("products", productRevenues);
+        model.addAttribute("searchName", searchName);
         return "pages/seller/statistic-report/product-report";
     }
 
@@ -243,8 +243,7 @@ public class SellerController {
             @Valid @ModelAttribute CreateProductDto productDto,
             BindingResult bindingResult,
             RedirectAttributes redirectAttributes,
-            Principal principal,
-            Model model) {
+            Principal principal) {
         try {
             productService.validateCreateProductDto(productDto, bindingResult);
             Product product = productService.createProductForAddRequest(productDto);
