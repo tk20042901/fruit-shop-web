@@ -442,7 +442,7 @@ public class CustomerController {
             CreatePaymentLinkRequest paymentData =
                     CreatePaymentLinkRequest.builder()
                             .orderCode(order.getId())
-                            .amount(order.getTotalAmount())
+                            .amount(2000L)
                             .expiredAt(order.getPaymentExpiredAt().atZone(ZoneId.systemDefault()).toEpochSecond())
                             .description("FS-" + order.getId())
                             .returnUrl("https:/ntbinh.online/customer/order-success")
