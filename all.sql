@@ -4512,4 +4512,3 @@ insert into setting("key", "value") values
 ('shop_address', 'Hoàng Giang, xã Nông Cống, tỉnh Thanh Hóa'),
 ('shop_phone', '0667710508'),
 ('shop_email', 'quetoi@shop.com')
-
