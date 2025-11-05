@@ -443,8 +443,8 @@ public class CustomerController {
                             .amount(2000L)
                             .expiredAt(order.getPaymentExpiredAt().atZone(ZoneId.systemDefault()).toEpochSecond())
                             .description("FS-" + order.getId())
-                            .returnUrl("https:/ntbinh.online/customer/order-success")
-                            .cancelUrl("https://ntbinh.online/customer/order-cancel")
+                            .returnUrl("https://fruitshop.tech/customer/order-success")
+                            .cancelUrl("https://fruitshop.tech/customer/order-cancel")
                             .build();
             String checkoutUrl = payOS.paymentRequests().create(paymentData).getCheckoutUrl();
             order.setPaymentLink(checkoutUrl);
