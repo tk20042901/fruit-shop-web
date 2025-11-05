@@ -24,6 +24,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.swp.project.dto.RevenueDto;
 import com.swp.project.dto.StaffDto;
+import com.swp.project.dto.ViewProductRequestDetailDto;
 import com.swp.project.entity.address.CommuneWard;
 import com.swp.project.entity.address.ProvinceCity;
 import com.swp.project.entity.order.Bill;
@@ -426,7 +427,8 @@ public class ManagerController {
     }
 
     @GetMapping("/report")
-    public String getManagerReport(Model model) {
+    public String getManagerReport(@RequestParam(defaultValue = "day") String timeSelected,
+                                    Model model) {
         Long totalUnitSold = orderService.getUnitSold();
         Long revenueToday = orderService.getRevenueToday();
         Long revenueThisWeek = orderService.getRevenueThisWeek();
@@ -436,15 +438,31 @@ public class ManagerController {
         double monthlyPercentageChange = orderService.getMonthlyPercentageChange();
         List<RevenueDto> daysReport = orderService.getDaysRevenue();
         List<RevenueDto> monthsReport = orderService.getMonthsRevenue();
+        String label  = "Doanh thu hôm nay";
+        long amount   = revenueToday == null ? 0 : revenueToday;
+        double change = dailyPercentageChange;
+        switch(timeSelected) {
+            case "week":
+                label = "Doanh thu tuần này";
+                amount = revenueThisWeek == null ? 0 : revenueThisWeek;
+                change = weeklyPercentageChange;
+                break;
+            case "month":
+                label = "Doanh thu tháng này";
+                amount = revenueThisMonth == null ? 0 : revenueThisMonth;
+                change = monthlyPercentageChange;
+                break;
+            case "day":
+            default:
+
+                break;
+        }
+        model.addAttribute("timeSelected", timeSelected);
+        model.addAttribute("label", label);
+        model.addAttribute("amount", amount);
+        model.addAttribute("change", change);
         model.addAttribute("daysReport", daysReport);
         model.addAttribute("monthsReport", monthsReport);
-        model.addAttribute("totalUnitSold", totalUnitSold == null ? 0 : totalUnitSold);
-        model.addAttribute("revenueToday", revenueToday == null ? 0 : revenueToday);
-        model.addAttribute("revenueThisWeek", revenueThisWeek == null ? 0 : revenueThisWeek);
-        model.addAttribute("revenueThisMonth", revenueThisMonth == null ? 0 : revenueThisMonth);
-        model.addAttribute("dailyPercentageChange", dailyPercentageChange);
-        model.addAttribute("weeklyPercentageChange", weeklyPercentageChange);
-        model.addAttribute("monthlyPercentageChange", monthlyPercentageChange);
         model.addAttribute("totalOrder",orderService.getTotalOrders());
         model.addAttribute("deliverOrder",orderService.getTotalDeliveredOrders());
         model.addAttribute("processingOrder",orderService.getTotalProcessingOrders());
@@ -499,6 +517,7 @@ public class ManagerController {
 
             model.addAttribute("sellerRequest", sellerRequest);
             model.addAttribute("isPending", sellerRequestStatusService.isPendingStatus(sellerRequest));
+            model.addAttribute("isCreate", sellerRequestTypeService.isAddType(sellerRequest));
             return returnPage;
         } catch (NullPointerException e) {
             redirectAttributes.addFlashAttribute("error", "Dữ liệu yêu cầu không đầy đủ");
@@ -565,31 +584,25 @@ public class ManagerController {
                 throw new IllegalArgumentException("Không thể đọc dữ liệu sản phẩm");
             }
             
+            Product oldProduct = null;
+            
             if (sellerRequestTypeService.isUpdateType(sellerRequest)) {
                 if (sellerRequestStatusService.isPendingStatus(sellerRequest)) {
                     Product oldProductFromContent = sellerRequestService.getEntityFromContent(
                             sellerRequest.getOldContent(), Product.class);
                     if (oldProductFromContent != null) {
-                        Product oldProduct = productService.getProductById(oldProductFromContent.getId());
-                        model.addAttribute("oldProduct", oldProduct);
+                        oldProduct = productService.getProductById(oldProductFromContent.getId());
                     }
                 } else {
-                    Product oldProduct = sellerRequestService.getEntityFromContent(
+                    oldProduct = sellerRequestService.getEntityFromContent(
                             sellerRequest.getOldContent(), Product.class);
-                    model.addAttribute("oldProduct", oldProduct);
                 }
             }
             
+            // Use DTO for both create and update types
+            ViewProductRequestDetailDto viewDto = new ViewProductRequestDetailDto(oldProduct, newProduct);
+            model.addAttribute("viewDto", viewDto);
             model.addAttribute("newProduct", newProduct);
-            
-            // Add sub-images with null safety and size validation
-            if (newProduct.getSub_images() != null && newProduct.getSub_images().size() >= 3) {
-                model.addAttribute("firstNewImage", newProduct.getSub_images().get(0).getSub_image_url());
-                model.addAttribute("secondNewImage", newProduct.getSub_images().get(1).getSub_image_url());
-                model.addAttribute("thirdNewImage", newProduct.getSub_images().get(2).getSub_image_url());
-            } else {
-                throw new IllegalStateException("Sản phẩm phải có ít nhất 3 hình ảnh phụ");
-            }
             
             return "pages/manager/product-request-details";
         } catch (Exception e) {
