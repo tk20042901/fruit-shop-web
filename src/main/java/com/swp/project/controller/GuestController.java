@@ -47,23 +47,13 @@ public class GuestController {
 
     @GetMapping("/login")
     public String showLoginForm(Model model) {
-<<<<<<< HEAD
-        model.addAttribute("siteKey", recaptchaSite);
-        return "pages/guest/login";
-=======
         return "/pages/guest/login";
->>>>>>> 8e8602e705488d0b1a3f824be7613312050886b0
     }
 
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
         model.addAttribute("registerDto", new RegisterDto());
-<<<<<<< HEAD
-        model.addAttribute("siteKey", recaptchaSite);
-        return "pages/guest/register";
-=======
         return "/pages/guest/register";
->>>>>>> 8e8602e705488d0b1a3f824be7613312050886b0
     }
 
     @PostMapping("/register")
