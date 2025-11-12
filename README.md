@@ -1,15 +1,15 @@
 # Dự án Spring Boot - Cửa hàng Hoa quả Online
 
-Đây là dự án backend được xây dựng bằng Spring Boot cho một website thương mại điện tử chuyên bán hoa quả được host trên fruitshop.tech
-Dự án được fork từ dự án https://github.com/hieunhangia/swp-project nhưng có sự điều chỉnh theo tên miền fruitshop.tech.
+* Đây là dự án backend được xây dựng bằng Spring Boot cho một website thương mại điện tử chuyên bán hoa quả được host trên fruitshop.tech
+* Dự án được fork từ dự án https://github.com/hieunhangia/swp-project nhưng có sự điều chỉnh theo tên miền fruitshop.tech.
 ## Mô tả
 
-Dự án này mô phỏng một hệ thống cửa hàng trực tuyến, cho phép người dùng xem danh sách sản phẩm, quản lý giỏ hàng và đặt hàng. Manager và S có quyền quản lý sản phẩm, danh mục, và xem các đơn hàng.
+Dự án này mô phỏng một hệ thống cửa hàng trực tuyến, cho phép người dùng xem danh sách sản phẩm, quản lý giỏ hàng và đặt hàng. 
 ## Thành viên
-Hiệu: https://github.com/hieunhangia
-Bình: https://github.com/tk20042901
-Nghĩa: https://github.com/nghianguyentin99
-Trường: https://github.com/Liu2k5
+* Hiệu: https://github.com/hieunhangia
+* Bình: https://github.com/tk20042901
+* Nghĩa: https://github.com/nghianguyentin99
+* Trường: https://github.com/Liu2k5
 ## Tính năng chính
 
 ### Guest (Khách vãng lai)
