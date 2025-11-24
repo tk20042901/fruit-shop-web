@@ -79,6 +79,6 @@ Dự án này mô phỏng một hệ thống cửa hàng trực tuyến, cho ph�
 * **Database:**
     * PostgreSQL 
 * **Frontend:**
-    * [Thymeleaf
+    * Thymeleaf
 * **Build Tool:**
-    * [Maven]
+    * Maven
